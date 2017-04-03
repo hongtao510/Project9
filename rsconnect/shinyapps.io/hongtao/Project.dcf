@@ -1,0 +1,11 @@
+name: Project
+title: Project
+account: hongtao
+server: shinyapps.io
+appId: 169033
+bundleId: 774218
+url: https://hongtao.shinyapps.io/Project/
+when: 1491175945.41499
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: project-rpubs.html|Project.html|project.md|project.Rpres|project-figure/unnamed-chunk-1-1.png|project-figure/unnamed-chunk-2-1.png|project-figure/unnamed-chunk-3-1.png

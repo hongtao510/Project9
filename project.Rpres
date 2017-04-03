@@ -1,0 +1,73 @@
+Find Correlations Between Markets
+========================================================
+author: TH
+date: April 2, 2017
+autosize: true
+
+Background
+========================================================
+
+This application is built using shiny (https://shiny.rstudio.com/). 
+
+It allows a user to calculate correlations between non-US markets and U.S. market. 
+
+Markets included:
+- EEM: MSCI Emerging Markets Index
+- EWJ: iShares MSCI Japan ETF
+- FXI: iShares FTSE/Xinhua China 25 Index ETF
+- EWZ: iShares MSCI Brazil ETF
+
+Dependency:
+R library "quantmod"
+
+How to use this app?
+========================================================
+
+- Step 1: Select an ETF from the dropdown menu
+- Step 2: Select a time period
+- Step 3: Select a rolling window
+- Step 4: Click the `Plot` button and wait a few seconds
+- Step 5: Go to `Correlation Plot` tab
+- Step 6: Switch to different markets or time frames
+
+App file structure
+========================================================
+Three files are used to create this app:
+- server.R: shiny app back-end
+- ui.R: shiny app front-end
+- calculate_cor.R: a R script used to download data and calculate correlation
+
+
+Example output
+========================================================
+
+```{r eval=TRUE, echo=FALSE}
+library(quantmod)
+library(dplyr)
+
+market_correlations <- function(sector, period = "weekly", window = 10) {
+    # Make a data frame of the sector and SP500 ETF.
+    etf_ticker_sector <- data_frame(c(sector, "SPY"))
+    colnames(etf_ticker_sector) <- "tickers"
+
+    # Use getSymbols and Ad to get adjusted prices.
+    symbols <- getSymbols(etf_ticker_sector$tickers, auto.assign = TRUE, warnings = FALSE)
+    etf_prices <- do.call(merge, lapply(symbols, function(x) Ad(get(x))))
+
+    # We want log returns by the period chosen by the user. 
+    etf_returns <- do.call(merge, lapply(etf_prices, 
+                                         function(x) periodReturn(x, period = period, type = 'log')))
+
+    # Create one xts object we can pass to rollapply.
+    merged_xts <- merge(etf_returns[, 1], etf_returns[, 2])
+    merged_xts$rolling_cor <- rollapply(merged_xts, window, 
+                                             function(x) cor(x[, 1], x[, 2], use = "pairwise.complete.obs"), 
+                                             by.column = FALSE)
+    # We care about the name because it will be displayed in the plot.
+    names(merged_xts) <- c(paste(sector, "Returns", sep = ""), "SPY Returns", paste(sector, "/SPY Correlation", sep = ""))
+    assign("sector_correlations", merged_xts, .GlobalEnv)
+}
+
+plot(market_correlations("EEM", "weekly", 10)[,3], main = "Rolling weekly correlation EEM/SPY")
+```
+
